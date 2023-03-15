@@ -1,0 +1,11 @@
+---
+docker_containers:
+- name: producer
+  image: "wurdum/api-pg-bench-api"
+  tag: "{{ image_tag }}"
+  published_ports:
+  - "80:80"
+  env:
+    ASPNETCORE_ENVIRONMENT: "Production"
+    ASPNETCORE_URLS: "http://+:80"
+    ConnectionStrings__Default: "Host=db.app.domain;Port=5432;Database=postgres;Username=postgres;Password=postgres"

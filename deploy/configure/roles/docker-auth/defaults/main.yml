@@ -1,0 +1,5 @@
+---
+docker_auth: []
+#  - username: "username"
+#    password: "passsword"
+#    url: "registry.example.com"

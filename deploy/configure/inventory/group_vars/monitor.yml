@@ -1,0 +1,52 @@
+---
+docker_volumes:
+- name: prometheus
+
+docker_container_configs:
+- name: prometheus.yml
+  content: "{{ lookup('file', './content/prometheus.yml') }}"
+- name: grafana-dashboard.yaml
+  content: |
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      org_id: 1
+      folder: ''
+      type: 'file'
+      options:
+        path: /var/lib/grafana/dashboards
+- name: grafana-datasource.yaml
+  content: |
+    apiVersion: 1
+    datasources:
+    - name: prometheus
+      type: prometheus
+      access: proxy
+      url: http://monitor.app.domain:9090
+      isDefault: true
+      editable: false
+- name: dashboard1.json
+  content: "{{ lookup('file', './content/dotnet-dashboard.json') }}"
+
+docker_containers:
+- name: prom
+  image: "quay.io/prometheus/prometheus"
+  tag: "v2.42.0"
+  published_ports:
+  - "9090:9090"
+  volumes:
+  - "prometheus:/prometheus"
+  - "{{ docker_configs_path }}/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+- name: grafana
+  image: "grafana/grafana"
+  tag: "latest"
+  published_ports:
+  - "80:3000"
+  env:
+    GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+    GF_AUTH_ANONYMOUS_ENABLED: "true"
+    GF_AUTH_BASIC_ENABLED: "false"
+  volumes:
+  - "{{ docker_configs_path }}/dashboard1.json:/var/lib/grafana/dashboards/dashboard1.json"
+  - "{{ docker_configs_path }}/grafana-dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml"
+  - "{{ docker_configs_path }}/grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml"

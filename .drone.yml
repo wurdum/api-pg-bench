@@ -1,0 +1,116 @@
+kind: pipeline
+type: docker
+name: default
+
+volumes:
+- name: dist
+  temp: {}
+- name: docker
+  host:
+    path: /var/run/docker.sock
+
+steps:
+- name: build
+  image: docker:dind
+  volumes:
+  - name: docker
+    path: /var/run/docker.sock
+  - name: dist
+    path: /dist
+  environment:
+    DOCKER_USER:
+      from_secret: DOCKER_USER
+    DOCKER_PASS:
+      from_secret: DOCKER_PASS
+  commands:
+  - |
+    echo $(date +'%Y%m%d%H%M%S') > /dist/image_tag
+    export IMAGE_TAG=$(cat /dist/image_tag)
+
+    docker build -f api.dockerfile \
+      -t wurdum/api-pg-bench-api:$IMAGE_TAG \
+      -t wurdum/api-pg-bench-api:latest \
+      .
+    docker build -f k6.dockerfile \
+      -t wurdum/api-pg-bench-k6:$IMAGE_TAG \
+      -t wurdum/api-pg-bench-k6:latest \
+      .
+
+    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+    docker push wurdum/api-pg-bench-api:$IMAGE_TAG
+    docker push wurdum/api-pg-bench-k6:$IMAGE_TAG
+    docker push wurdum/api-pg-bench-api:latest
+    docker push wurdum/api-pg-bench-k6:latest
+
+# - name: provision
+#   image: hashicorp/terraform:1.3.7
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#   commands:
+#   - |
+#     cd deploy/provision
+
+#     terraform init
+#     terraform apply -auto-approve
+
+# - name: configure
+#   image: wurdum/ansible:1.0.0@sha256:fb9cbe30feefddee370855f8c7a069b0bcd2f9d46dfe8b495a5b88ecd5f2ed9a
+#   volumes:
+#   - name: dist
+#     path: /dist
+#   environment:
+#     AWS_ACCESS_KEY_ID:
+#       from_secret: AWS_ACCESS_KEY_ID
+#     AWS_SECRET_ACCESS_KEY:
+#       from_secret: AWS_SECRET_ACCESS_KEY
+#     AWS_SSH_KEY:
+#       from_secret: AWS_SSH_KEY
+#     AWS_BASTION_HOST:
+#       from_secret: AWS_BASTION_HOST
+#     DOCKER_USER:
+#       from_secret: DOCKER_USER
+#     DOCKER_PASS:
+#       from_secret: DOCKER_PASS
+#   commands:
+#   - |
+#     export IMAGE_TAG=$(cat /dist/image_tag)
+
+#     cd deploy/configure
+
+#     echo "Setting up SSH keys and config..."
+#     mkdir ~/.ssh
+#     sed -e "s/{{ bastion }}/$AWS_BASTION_HOST/g" ./templates/ssh.config > ~/.ssh/config
+#     echo $AWS_SSH_KEY | openssl base64 -A -d > ~/.ssh/id_rsa
+#     chmod 700 ~/.ssh
+#     chmod 600 ~/.ssh/id_rsa
+
+#     echo "Running Ansible..."
+#     ansible-playbook site.yml -D -e "image_tag=$IMAGE_TAG docker_user=$DOCKER_USER docker_pass=$DOCKER_PASS"
+#   depends_on:
+#   - build
+#   - provision
+
+---
+kind: pipeline
+type: docker
+name: destroy
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: destroy
+  image: hashicorp/terraform:1.3.7
+  environment:
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+  commands:
+  - |
+    cd deploy/provision
+    terraform destroy -auto-approve

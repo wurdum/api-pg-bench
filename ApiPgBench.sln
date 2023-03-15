@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D8196FBB-EB4A-4C30-BBF1-F48BC524F272}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiPgBench.Web", "src\ApiPgBench.Web\ApiPgBench.Web.csproj", "{50AAD07F-3CF4-470D-BE4C-0A2BF65BEAB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiPgBench.Tests", "src\ApiPgBench.Tests\ApiPgBench.Tests.csproj", "{0EDDEABF-19FD-4ED1-A6CE-DD92DE0C3C7F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{50AAD07F-3CF4-470D-BE4C-0A2BF65BEAB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50AAD07F-3CF4-470D-BE4C-0A2BF65BEAB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50AAD07F-3CF4-470D-BE4C-0A2BF65BEAB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50AAD07F-3CF4-470D-BE4C-0A2BF65BEAB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EDDEABF-19FD-4ED1-A6CE-DD92DE0C3C7F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EDDEABF-19FD-4ED1-A6CE-DD92DE0C3C7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EDDEABF-19FD-4ED1-A6CE-DD92DE0C3C7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EDDEABF-19FD-4ED1-A6CE-DD92DE0C3C7F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{50AAD07F-3CF4-470D-BE4C-0A2BF65BEAB6} = {D8196FBB-EB4A-4C30-BBF1-F48BC524F272}
+		{0EDDEABF-19FD-4ED1-A6CE-DD92DE0C3C7F} = {D8196FBB-EB4A-4C30-BBF1-F48BC524F272}
+	EndGlobalSection
+EndGlobal

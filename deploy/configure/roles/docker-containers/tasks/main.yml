@@ -1,0 +1,33 @@
+---
+- name: Create configs directory
+  ansible.builtin.file:
+    path: "{{ docker_configs_path }}"
+    state: directory
+    mode: "0755"
+  when: docker_configs_path | length > 0
+
+- name: Create configs file
+  copy:
+    dest: "{{ docker_configs_path }}/{{ item.name }}"
+    content: "{{ item.content }}"
+    mode: "0755"
+  with_items: "{{ docker_container_configs }}"
+
+- name: Create volumes
+  docker_volume:
+    name: "{{ item.name }}"
+  with_items: "{{ docker_volumes }}"
+
+- name: Create containers
+  docker_container:
+    name: "{{ item.name }}"
+    image: "{{ item.image }}:{{ item.tag }}"
+    state: started
+    auto_remove: "{{ item.auto_remove | default('no') }}"
+    recreate: "{{ item.recreate | default('yes') }}"
+    restart_policy: "{{ item.restart_policy | default('always') }}"
+    published_ports: "{{ item.published_ports | default([]) }}"
+    env: "{{ item.env | default({}) }}"
+    volumes: "{{ item.volumes | default([]) }}"
+    command: "{{ item.command | default('') }}"
+  with_items: "{{ docker_containers }}"
