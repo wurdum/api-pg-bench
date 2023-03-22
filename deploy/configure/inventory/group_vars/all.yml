@@ -4,7 +4,3 @@ ansible_user: ubuntu
 ansible_become: true
 
 docker_configs_path: "/opt/docker"
-
-docker_auth:
-- username: "{{ docker_user }}"
-  password: "{{ docker_pass }}"

@@ -10,7 +10,7 @@ variable "domain_name" {
 
 variable "ingressrules" {
   type    = list(number)
-  default = [22, 80, 5432]
+  default = [22, 80, 5432, 9090]
 }
 
 variable "consumer_count" {

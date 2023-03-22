@@ -37,6 +37,12 @@ docker_containers:
   volumes:
   - "prometheus:/prometheus"
   - "{{ docker_configs_path }}/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+  command:
+  - "--web.enable-remote-write-receiver"
+  - "--enable-feature=native-histograms"
+  - "--config.file=/etc/prometheus/prometheus.yml"
+  - "--storage.tsdb.path=/prometheus"
+  - "--storage.tsdb.retention.time=15d"
 - name: grafana
   image: "grafana/grafana"
   tag: "latest"

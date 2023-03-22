@@ -8,6 +8,11 @@ data "aws_ami" "ami" {
   }
 }
 
+resource "aws_iam_instance_profile" "ec2_ecr_profile" {
+  name = "ec2-ecr-instance-profile"
+  role = aws_iam_role.ec2_ecr_role.name
+}
+
 data "aws_eip" "ec2_b_ip" {
   id = var.ec2_bastion_eip_id
 }
@@ -46,6 +51,7 @@ resource "aws_instance" "k6" {
   subnet_id                   = aws_subnet.subnet.id
   vpc_security_group_ids      = [aws_security_group.sg.id]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_ecr_profile.name
 
   root_block_device {
     volume_type = "gp2"
@@ -61,7 +67,7 @@ resource "aws_instance" "k6" {
 
 resource "aws_instance" "db" {
   ami           = data.aws_ami.ami.id
-  instance_type = "t3.large"
+  instance_type = "r5d.large"
   key_name      = var.ec2_ssh_key_name
 
   subnet_id                   = aws_subnet.subnet.id
@@ -88,6 +94,7 @@ resource "aws_instance" "api" {
   subnet_id                   = aws_subnet.subnet.id
   vpc_security_group_ids      = [aws_security_group.sg.id]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_ecr_profile.name
 
   root_block_device {
     volume_type = "gp2"

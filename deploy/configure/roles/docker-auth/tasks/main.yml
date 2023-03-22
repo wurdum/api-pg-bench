@@ -5,4 +5,15 @@
     username: "{{ item.username }}"
     password: "{{ item.password }}"
     reauthorize: true
-  with_items: "{{ docker_auth }}"
+  with_items: "{{ docker_hub_auth }}"
+
+- name: Install AWS CLI
+  package:
+    name: awscli
+    state: present
+  when: docker_ecr_auth | length > 0
+
+- name: Log into ECR
+  shell: "aws ecr get-login-password --region {{ item.region }} | docker login --username AWS --password-stdin {{ item.url }}"
+  with_items: "{{ docker_ecr_auth }}"
+  when: docker_ecr_auth | length > 0

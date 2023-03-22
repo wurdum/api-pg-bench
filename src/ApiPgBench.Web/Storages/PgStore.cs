@@ -1,3 +1,4 @@
+using ApiPgBench.Web.Infrastructure;
 using Dapper;
 using Npgsql;
 
@@ -34,6 +35,8 @@ public abstract class PgStore<T> : IStore<T>
     public virtual async Task<T?> FindAsync(long id)
     {
         await using var connection = await GetConnectionAsync();
+        using var latency = ServiceMetrics.QueryExecuted(nameof(FindAsync), GetType().Name);
+
         var entity = await connection.QueryFirstOrDefaultAsync<T>(SelectEntityByKeySql, new { id });
 
         return entity;
@@ -42,6 +45,8 @@ public abstract class PgStore<T> : IStore<T>
     public async Task<IReadOnlyCollection<T>> GetAllAsync()
     {
         await using var connection = await GetConnectionAsync();
+        using var latency = ServiceMetrics.QueryExecuted(nameof(GetAllAsync), GetType().Name);
+
         var entities = await connection.QueryAsync<T>(SelectAllEntities);
 
         return entities.ToArray();
@@ -50,6 +55,8 @@ public abstract class PgStore<T> : IStore<T>
     public async Task<T> AddAsync(T entity)
     {
         await using var connection = await GetConnectionAsync();
+        using var latency = ServiceMetrics.QueryExecuted(nameof(AddAsync), GetType().Name);
+
         var id = await connection.ExecuteScalarAsync<long>(InsertEntitySql, GetInsertEntityParameters(entity));
         entity.Id = id;
         return entity;
@@ -64,6 +71,8 @@ public abstract class PgStore<T> : IStore<T>
         {
             foreach (var entity in entities)
             {
+                using var latency = ServiceMetrics.QueryExecuted(nameof(AddAllAsync), GetType().Name);
+
                 await connection.ExecuteAsync(InsertEntitySql, GetInsertEntityParameters(entity), tran);
             }
 

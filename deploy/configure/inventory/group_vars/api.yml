@@ -1,7 +1,11 @@
 ---
+docker_ecr_auth:
+- region: "{{ aws_region }}"
+  url: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+
 docker_containers:
 - name: producer
-  image: "wurdum/api-pg-bench-api"
+  image: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com/api"
   tag: "{{ image_tag }}"
   published_ports:
   - "80:80"
