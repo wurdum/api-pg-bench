@@ -1,0 +1,14 @@
+---
+docker_ecr_auth:
+- region: "{{ aws_region }}"
+  url: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com"
+
+docker_containers:
+- name: k6
+  image: "{{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com/k6"
+  tag: "{{ image_tag }}"
+  auto_remove: "yes"
+  restart_policy: "no"
+  command: "run /app/create-transactions-test.js -o experimental-prometheus-rw"
+  env:
+    API_HOSTNAME: "http://api.app.domain"

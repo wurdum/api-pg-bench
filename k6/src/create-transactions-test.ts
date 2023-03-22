@@ -8,20 +8,20 @@ export let options: Options = {
   insecureSkipTLSVerify: true,
   summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(95)', 'p(99)', 'count'],
   scenarios: {
-    // transactions: {
-    //   executor: 'ramping-arrival-rate',
-    //   preAllocatedVUs: 100,
-    //   stages: [
-    //     { target: 10000, duration: '10s' },
-    //     { target: 30000, duration: '20s' },
-    //     { target: 10000, duration: '10s' }
-    //   ]
-    // },
-    main: {
-      executor: 'shared-iterations',
-      vus: 1,
-      iterations: 10
+    transactions: {
+      executor: 'ramping-arrival-rate',
+      preAllocatedVUs: 100,
+      stages: [
+        { target: 10000, duration: '30s' },
+        { target: 30000, duration: '60s' },
+        { target: 10000, duration: '30s' }
+      ]
     },
+    // main: {
+    //   executor: 'shared-iterations',
+    //   vus: 1,
+    //   iterations: 10
+    // },
   }
 };
 

@@ -23,7 +23,6 @@ steps:
     export IMAGE_TAG=$(cat /dist/image_tag)
 
     docker build -f api.dockerfile -t wurdum/api-pg-bench-api:$IMAGE_TAG .
-    docker build -f k6.dockerfile -t wurdum/api-pg-bench-k6:$IMAGE_TAG .
 
 - name: provision
   image: hashicorp/terraform:1.3.7
@@ -39,7 +38,7 @@ steps:
     terraform init
     terraform apply -auto-approve
 
-- name: publish images
+- name: publish
   image: docker:dind
   volumes:
   - name: docker
@@ -62,9 +61,94 @@ steps:
     DOCKER_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
     aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+
     docker image tag wurdum/api-pg-bench-api:$IMAGE_TAG $DOCKER_REGISTRY/api:$IMAGE_TAG
     docker image tag wurdum/api-pg-bench-api:$IMAGE_TAG $DOCKER_REGISTRY/api:latest
     docker push $DOCKER_REGISTRY/api:$IMAGE_TAG
+
+- name: configure
+  image: wurdum/ansible:1.0.0@sha256:fb9cbe30feefddee370855f8c7a069b0bcd2f9d46dfe8b495a5b88ecd5f2ed9a
+  volumes:
+  - name: dist
+    path: /dist
+  environment:
+    AWS_ACCOUNT_ID:
+      from_secret: AWS_ACCOUNT_ID
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+    AWS_SSH_KEY:
+      from_secret: AWS_SSH_KEY
+    AWS_BASTION_HOST:
+      from_secret: AWS_BASTION_HOST
+  commands:
+  - |
+    IMAGE_TAG=$(cat /dist/image_tag)
+    ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+    cd deploy/configure
+
+    echo "Setting up SSH keys and config..."
+    mkdir ~/.ssh
+    sed -e "s/{{ bastion }}/$AWS_BASTION_HOST/g" ./templates/ssh.config > ~/.ssh/config
+    echo $AWS_SSH_KEY | openssl base64 -A -d > ~/.ssh/id_rsa
+    chmod 700 ~/.ssh
+    chmod 600 ~/.ssh/id_rsa
+
+    echo "Running Ansible..."
+    ansible-playbook site.yml -D --limit '!k6' -e "aws_region=$AWS_REGION aws_account_id=$AWS_ACCOUNT_ID image_tag=$IMAGE_TAG"
+
+---
+kind: pipeline
+type: docker
+name: test
+
+volumes:
+- name: dist
+  temp: {}
+- name: docker
+  host:
+    path: /var/run/docker.sock
+
+steps:
+- name: build
+  image: docker:dind
+  volumes:
+  - name: docker
+    path: /var/run/docker.sock
+  - name: dist
+    path: /dist
+  commands:
+  - |
+    echo $(date +'%Y%m%d%H%M%S') > /dist/image_tag
+    export IMAGE_TAG=$(cat /dist/image_tag)
+
+    docker build -f k6.dockerfile -t wurdum/api-pg-bench-k6:$IMAGE_TAG .
+
+- name: publish
+  image: docker:dind
+  volumes:
+  - name: docker
+    path: /var/run/docker.sock
+  - name: dist
+    path: /dist
+  environment:
+    AWS_ACCOUNT_ID:
+      from_secret: AWS_ACCOUNT_ID
+    AWS_ACCESS_KEY_ID:
+      from_secret: AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY:
+      from_secret: AWS_SECRET_ACCESS_KEY
+  commands:
+  - |
+    apk add --no-cache curl jq python3 py3-pip
+    pip install awscli
+
+    IMAGE_TAG=$(cat /dist/image_tag)
+    DOCKER_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
 
     docker image tag wurdum/api-pg-bench-k6:$IMAGE_TAG $DOCKER_REGISTRY/k6:$IMAGE_TAG
     docker image tag wurdum/api-pg-bench-k6:$IMAGE_TAG $DOCKER_REGISTRY/k6:latest
@@ -101,16 +185,12 @@ steps:
     chmod 600 ~/.ssh/id_rsa
 
     echo "Running Ansible..."
-    ansible-playbook site.yml -D -e "aws_region=$AWS_REGION aws_account_id=$AWS_ACCOUNT_ID image_tag=$IMAGE_TAG"
+    ansible-playbook site.yml -D --limit 'k6' -e "aws_region=$AWS_REGION aws_account_id=$AWS_ACCOUNT_ID image_tag=$IMAGE_TAG"
 
 ---
 kind: pipeline
 type: docker
 name: destroy
-
-platform:
-  os: linux
-  arch: amd64
 
 steps:
 - name: destroy
