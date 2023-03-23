@@ -19,8 +19,8 @@ export let options: Options = {
     },
     // main: {
     //   executor: 'shared-iterations',
-    //   vus: 1,
-    //   iterations: 10
+    //   vus: 100,
+    //   iterations: 10000
     // },
   }
 };

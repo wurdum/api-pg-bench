@@ -27,6 +27,8 @@ docker_container_configs:
       editable: false
 - name: dashboard1.json
   content: "{{ lookup('file', './content/dotnet-dashboard.json') }}"
+- name: dashboard2.json
+  content: "{{ lookup('file', './content/k6-dashboard.json') }}"
 
 docker_containers:
 - name: prom
@@ -54,5 +56,6 @@ docker_containers:
     GF_AUTH_BASIC_ENABLED: "false"
   volumes:
   - "{{ docker_configs_path }}/dashboard1.json:/var/lib/grafana/dashboards/dashboard1.json"
+  - "{{ docker_configs_path }}/dashboard2.json:/var/lib/grafana/dashboards/dashboard2.json"
   - "{{ docker_configs_path }}/grafana-dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml"
   - "{{ docker_configs_path }}/grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml"

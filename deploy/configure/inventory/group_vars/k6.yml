@@ -9,6 +9,8 @@ docker_containers:
   tag: "{{ image_tag }}"
   auto_remove: "yes"
   restart_policy: "no"
-  command: "run /app/create-transactions-test.js -o experimental-prometheus-rw"
+  command: "run --tag testid={{ '%Y%m%d%H%M%S' | strftime(ansible_date_time.epoch) }} -o experimental-prometheus-rw /app/create-transactions-test.js"
   env:
     API_HOSTNAME: "http://api.app.domain"
+    K6_PROMETHEUS_RW_SERVER_URL: "http://monitor.app.domain:9090/api/v1/write"
+    K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: "true"
