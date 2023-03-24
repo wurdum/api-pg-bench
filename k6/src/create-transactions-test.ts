@@ -11,10 +11,11 @@ export let options: Options = {
     transactions: {
       executor: 'ramping-arrival-rate',
       preAllocatedVUs: 100,
+      maxVUs: 10000,
       stages: [
-        { target: 10000, duration: '30s' },
-        { target: 30000, duration: '60s' },
-        { target: 10000, duration: '30s' }
+        { target: 10000, duration: '3m' },
+        { target: 30000, duration: '5m' },
+        { target: 10000, duration: '3m' }
       ]
     },
     // main: {

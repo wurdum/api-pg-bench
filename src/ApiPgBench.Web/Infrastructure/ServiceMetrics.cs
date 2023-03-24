@@ -7,7 +7,7 @@ public static class ServiceMetrics
 {
     public const string Namespace = "ApiPgBench";
     private static readonly Meter Meter = new(Namespace);
-    private static readonly Histogram<long> QueryExecutionLatency = Meter.CreateHistogram<long>("query_execution_latency", "ms");
+    private static readonly Histogram<long> QueryDuration = Meter.CreateHistogram<long>("query_duration", "ms");
 
     public static IDisposable QueryExecuted(string query, string type)
     {
@@ -15,7 +15,7 @@ public static class ServiceMetrics
         return new ActionDisposable(() =>
         {
             st.Stop();
-            QueryExecutionLatency.Record(st.ElapsedMilliseconds, new TagList()
+            QueryDuration.Record(st.ElapsedMilliseconds, new TagList()
             {
                 { "query", query },
                 { "type", type },
